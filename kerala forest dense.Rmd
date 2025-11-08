@@ -1,0 +1,74 @@
+---
+title: "Kerala District-wise Forest Density"
+author: "Basim Nihal"
+date: "2025-11-08"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r}
+# Load libraries
+library(sf)
+library(ggplot2)
+library(dplyr)
+library(readr)
+
+#Load kml file
+map_data <- st_read("kerala.kml")
+print(map_data)
+district_column <- "Name"
+```
+
+```{r}
+#Load data
+datafile <- read.csv("datafile.csv")
+head(datafile)
+
+# Prepare the forest density data frame for merging
+forest_density_data <- data.frame(
+  District = c(datafile$District),
+  Forest_Density_Percent = c(datafile$Percent.of.GA)) 
+```
+
+```{r}
+#  Merge the data
+merged_data <- map_data %>%
+  left_join(forest_density_data, by = setNames("District", district_column)) 
+
+
+# Create the Choropleth Map using ggplot2
+kerala_choropleth <- ggplot(data = merged_data) +
+  geom_sf(aes(fill = Forest_Density_Percent), 
+          color = "white",  
+          size = 0.5) +   
+  
+  # Set a color scale for forest density (e.g., a green gradient)
+  scale_fill_viridis_c(
+    option = "G", 
+    direction = -1, 
+    name = "Forest Density (%)", 
+    guide = guide_colorbar(barheight = 10) 
+  ) +
+  
+  # Add labels and title
+  labs(
+    title = "Kerala District-wise Forest Density",
+    subtitle = "Visualizing the percentage of forest cover by district",
+    caption = "Data Source: data.gov.in"
+  ) +
+  
+  # Customize the theme 
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    plot.subtitle = element_text(hjust = 0.5),
+    axis.title = element_blank(),
+    axis.text = element_blank(),
+    panel.grid = element_blank()
+  )
+
+#  Display the map
+print(kerala_choropleth)
+```
+
